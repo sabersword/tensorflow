@@ -4,9 +4,6 @@ import numpy as np
 
 from collections import namedtuple
 
-
-
-
 images = np.arange(9).reshape(3,3)
 perm = np.arange(images.shape[0])
 np.random.shuffle(perm)
