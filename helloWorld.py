@@ -12,7 +12,7 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 import tensorflow as tf
 # sess = tf.InteractiveSession()
 
-
+'''打开图片'''
 image_raw_data = tf.gfile.FastGFile('E:/singleCaptcha/a0.jpg', 'rb').read()
 
 with tf.Session() as sess:
