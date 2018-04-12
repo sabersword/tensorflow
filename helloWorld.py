@@ -23,18 +23,18 @@ array1 = array1[[[2, 1, 0]]]
 '''打开图片'''
 image_raw_data = tf.gfile.FastGFile('E:/singleCaptcha/a0.jpg', 'rb').read()
 
-# with tf.Session() as sess:
-#     # 将图像使用 jpeg 的格式解码从而得到图像对应的三维矩阵
-#     # tf.image.decode_jpeg 函数对 png 格式的图像进行解码。解码之后的结果为一个张量，
-#     ## 在使用它的取值之前需要明确调用运行的过程。
-#     img_data = tf.image.decode_jpeg(image_raw_data)
-#
-#     # 输出解码之后的三维矩阵。
-#     print(img_data.eval())
-#     imgData = img_data.eval()
-#     imgFloat = tf.cast(imgData, tf.float32)
-#     plt.imshow(img_data.eval())
-#     plt.show()
+# with tf.Session() as sess: 用上面打开的tf.session
+# 将图像使用 jpeg 的格式解码从而得到图像对应的三维矩阵
+# tf.image.decode_jpeg 函数对 png 格式的图像进行解码。解码之后的结果为一个张量，
+## 在使用它的取值之前需要明确调用运行的过程。
+img_data = tf.image.decode_jpeg(image_raw_data)
+
+# 输出解码之后的三维矩阵。
+print(img_data.eval())
+imgData = img_data.eval()
+imgFloat = tf.cast(imgData, tf.float32)
+plt.imshow(img_data.eval())
+plt.show()
 
 
 # weight initialization
