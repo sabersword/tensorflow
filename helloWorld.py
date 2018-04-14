@@ -1,7 +1,7 @@
 # load MNIST data
 
 import numpy as np
-
+import os
 from collections import namedtuple
 
 import matplotlib.pyplot as plt
@@ -12,6 +12,65 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 import tensorflow as tf
 sess = tf.InteractiveSession()
 
+
+
+class DataSet(object):
+
+    def __init__(self,
+                images,
+                labels):
+        self.images = images
+        self.labels = labels
+        if images.shape[0] != labels.shape[0]:
+            print("图像和标签行数不匹配")
+        else:
+            print("图像和标签行数匹配")
+        self.num_examples = images.shape[0]
+        self.epochs_completed = 0
+        self.index_in_epoch = 0
+
+    def next_batch(self, batch_size):
+        start = self.index_in_epoch
+        # Shuffle for the first epoch
+        if self.epochs_completed == 0 and start == 0 :
+            perm0 = np.arange(self.num_examples)
+            np.random.shuffle(perm0)
+            self.images = self.images[perm0]
+            self.labels = self.labels[perm0]
+        # Go to the next epoch
+        if start + batch_size > self.num_examples:
+            start = 0
+            self.index_in_epoch = batch_size
+        end = self.index_in_epoch
+        return self._images[start:end], self._labels[start:end]
+
+            # Finished epoch
+            self.epochs_completed += 1
+            # Get the rest examples in this epoch
+            rest_num_examples = self._num_examples - start
+            images_rest_part = self._images[start:self._num_examples]
+            labels_rest_part = self._labels[start:self._num_examples]
+            # Shuffle the data
+            if shuffle:
+                perm = numpy.arange(self._num_examples)
+                numpy.random.shuffle(perm)
+                self._images = self.images[perm]
+                self._labels = self.labels[perm]
+            # Start next epoch
+            start = 0
+            self._index_in_epoch = batch_size - rest_num_examples
+            end = self._index_in_epoch
+            images_new_part = self._images[start:end]
+            labels_new_part = self._labels[start:end]
+            return numpy.concatenate((images_rest_part, images_new_part), axis=0), numpy.concatenate(
+                (labels_rest_part, labels_new_part), axis=0)
+        else:
+            self._index_in_epoch += batch_size
+            end = self._index_in_epoch
+            return self._images[start:end], self._labels[start:end]
+
+
+# 洗牌
 array1 = np.arange(9).reshape(3, 3)  # type: np.ndarray
 shuffleArray = np.arange(3)  # type: np.ndarray
 np.random.shuffle(shuffleArray)
@@ -20,21 +79,44 @@ array1 = array1[[[2, 1, 0]]]
 
 
 
-'''打开图片'''
-image_raw_data = tf.gfile.FastGFile('E:/singleCaptcha/a0.jpg', 'rb').read()
+
+# image_raw_data = tf.gfile.FastGFile('E:/singleCaptcha/0/0_0.jpg', 'rb').read()
 
 # with tf.Session() as sess: 用上面打开的tf.session
 # 将图像使用 jpeg 的格式解码从而得到图像对应的三维矩阵
 # tf.image.decode_jpeg 函数对 png 格式的图像进行解码。解码之后的结果为一个张量，
 ## 在使用它的取值之前需要明确调用运行的过程。
-img_data = tf.image.decode_jpeg(image_raw_data)
+# img_data = tf.image.decode_jpeg(image_raw_data)
 
 # 输出解码之后的三维矩阵。
-print(img_data.eval())
-imgData = img_data.eval()
-imgFloat = tf.cast(imgData, tf.float32)
-plt.imshow(img_data.eval())
-plt.show()
+# print(imgData.eval())
+# img_data = img_data.eval()
+# normalize_data = img_data / 255
+# img_float = tf.cast(img_data, tf.float32)
+# plt.imshow(img_data.eval())
+# plt.show()
+
+
+def read_images_and_labels(image_root_dir):
+    image_dirs = os.listdir(image_root_dir)
+    image_array = np.zeros(shape=(1000, 40, 40, 3))
+    label_array = np.zeros(shape=(1000, 10))
+    i = 0
+    for image_dir in image_dirs:
+        label = int(image_dir)
+        for image_file in os.listdir(os.path.join(image_root_dir, image_dir)):
+            image_raw_data = tf.gfile.FastGFile(os.path.join(image_root_dir, image_dir, image_file), 'rb').read()
+            img_data = tf.image.decode_jpeg(image_raw_data).eval() / 255
+            image_array[i] = img_data
+            label_array[i, label] = 1
+            i += 1
+            print("i=", i)
+    image_array = tf.cast(image_array, tf.float32)
+    label_array = tf.cast(label_array, tf.float32)
+    return image_array, label_array
+
+images, labels = read_images_and_labels("E:/singleCaptcha")
+train = DataSet(images, labels)
 
 
 # weight initialization
@@ -46,7 +128,7 @@ def weight_variable(shape):
     return tf.Variable(initial)
 
 def bias_variable(shape):
-    initial = tf.constant(0.1, shape = shape)
+    initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
 # convolution
