@@ -47,6 +47,8 @@ def read_images_and_labels(image_root_dir):
         label = int(image_dir)
         for image_file in os.listdir(os.path.join(image_root_dir, image_dir)):
             image_raw_data = tf.gfile.FastGFile(os.path.join(image_root_dir, image_dir, image_file), 'rb').read()
+            # 灰度图像可以收敛 奇怪
+            # img_data = tf.image.rgb_to_grayscale(tf.image.decode_jpeg(image_raw_data)).eval() / 255
             img_data = tf.image.decode_jpeg(image_raw_data).eval() / 255
             image_array[i] = img_data
             label_array[i, label] = 1
@@ -114,8 +116,8 @@ y_ = tf.placeholder(tf.float32, [None, 10])
 # y = tf.nn.softmax(tf.matmul(x,W) + b)
 
 # first convolutinal layer
-w_conv1 = weight_variable([5, 5, 3, 27])
-b_conv1 = bias_variable([27])
+w_conv1 = weight_variable([5, 5, 3, 32])
+b_conv1 = bias_variable([32])
 
 # 重新调整张量的维度,如下-1表示不计算,其余3个维度调整为28,28,1的四维张量
 # x_image = tf.reshape(x, [-1, 40, 40, 3])
@@ -125,17 +127,17 @@ h_conv1 = tf.nn.relu(conv2d(x, w_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
 
 # second convolutional layer
-w_conv2 = weight_variable([5, 5, 27, 81])
-b_conv2 = bias_variable([81])
+w_conv2 = weight_variable([5, 5, 32, 64])
+b_conv2 = bias_variable([64])
 
 h_conv2 = tf.nn.relu(conv2d(h_pool1, w_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
 # densely connected layer
-w_fc1 = weight_variable([10*10*81, 1024])
+w_fc1 = weight_variable([10*10*64, 1024])
 b_fc1 = bias_variable([1024])
 
-h_pool2_flat = tf.reshape(h_pool2, [-1, 10*10*81])
+h_pool2_flat = tf.reshape(h_pool2, [-1, 10*10*64])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, w_fc1) + b_fc1)
 
 # dropout
@@ -158,15 +160,15 @@ y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop, w_fc2) + b_fc2)
 
 # train and evaluate the model
 cross_entropy = -tf.reduce_sum(y_*tf.log(y_conv))
-train_step = tf.train.AdagradOptimizer(1e-1).minimize(cross_entropy)
+# train_step = tf.train.AdagradOptimizer(1e-5).minimize(cross_entropy)
 # 最小化这个的一个操作
-# train_step = tf.train.GradientDescentOptimizer(1e-5).minimize(cross_entropy)
+train_step = tf.train.GradientDescentOptimizer(1e-5).minimize(cross_entropy)
 # tf.argmax,它能给出某个tensor对象在某一维上的其数据最大值所在的索引值
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 sess.run(tf.global_variables_initializer())
 for i in range(200000):
-    train_image, train_label = train.next_batch(30)
+    train_image, train_label = train.next_batch(20)
     # batch = mnist.train.next_batch(50)
     if i % 100 == 0:
         # train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
