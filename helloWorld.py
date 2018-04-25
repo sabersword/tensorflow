@@ -179,3 +179,4 @@ for i in range(200000):
 
 print("test accuracy %g" % accuracy.eval(session=sess, feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob:1.0}))
 
+
