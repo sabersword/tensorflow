@@ -181,3 +181,4 @@ print("test accuracy %g" % accuracy.eval(session=sess, feed_dict={x: mnist.test.
 
 
 
+
