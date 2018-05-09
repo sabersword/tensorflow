@@ -54,7 +54,7 @@ train_input_fn = tf.estimator.inputs.numpy_input_fn(
     shuffle=True)
 
 # 训练模型
-estimator.train(input_fn=train_input_fn, steps=1000)
+estimator.train(input_fn=train_input_fn, steps=10000)
 
 
 test_input_fn = tf.estimator.inputs.numpy_input_fn(
