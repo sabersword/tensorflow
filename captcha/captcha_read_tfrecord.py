@@ -1,7 +1,7 @@
 import numpy as np
 import os
-import data
 import tensorflow as tf
+from captcha.captcha_write_tfrecord import TRAIN_DATA_NUM
 
 tf.logging.set_verbosity(tf.logging.DEBUG)
 
@@ -70,36 +70,38 @@ def read_images_and_labels_by_estimator(image_root_dir):
     # label_array = tf.cast(label_array, tf.float32).eval()
     return image_array, label_array
 
-sess = tf.InteractiveSession()
-# 读取图片训练集
-reader = tf.TFRecordReader()
-filename_queue = tf.train.string_input_producer(["captcha.tfrecords"])
-_, serialized_example = reader.read(filename_queue)
-features = tf.parse_single_example(
-    serialized_example,
-    features={
-        'image': tf.FixedLenFeature([], tf.string),
-        'label': tf.FixedLenFeature([], tf.int64)
-    })
 
-image = tf.decode_raw(features['image'], tf.float32)
-label = features['label']
+if __name__ == '__main__':
+    sess = tf.InteractiveSession()
+    # 读取图片训练集
+    reader = tf.TFRecordReader()
+    filename_queue = tf.train.string_input_producer(["captcha.train.tfrecords"])
+    _, serialized_example = reader.read(filename_queue)
+    features = tf.parse_single_example(
+        serialized_example,
+        features={
+            'image': tf.FixedLenFeature([], tf.string),
+            'label': tf.FixedLenFeature([], tf.int64)
+        })
 
-coord = tf.train.Coordinator()
-threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-for i in range(40):
-    image_view = sess.run(image)
-    label_view = sess.run(label)
+    image = tf.decode_raw(features['image'], tf.float32)
+    label = features['label']
 
-# model_params = {"learning_rate": 0.0001}
-# estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="captcha_models")
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    for i in range(TRAIN_DATA_NUM):
+        image_view = sess.run(image)
+        label_view = sess.run(label)
 
-# train_input_fn = tf.estimator.inputs.numpy_input_fn(
-#     x={"image": images},
-#     y=labels.astype(np.int32),
-#     num_epochs=None,
-#     batch_size=10,
-#     shuffle=True)
+    # model_params = {"learning_rate": 0.0001}
+    # estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="captcha_models")
 
-# 训练模型
-# estimator.train(input_fn=train_input_fn, steps=10000)
+    # train_input_fn = tf.estimator.inputs.numpy_input_fn(
+    #     x={"image": images},
+    #     y=labels.astype(np.int32),
+    #     num_epochs=None,
+    #     batch_size=10,
+    #     shuffle=True)
+
+    # 训练模型
+    # estimator.train(input_fn=train_input_fn, steps=10000)
