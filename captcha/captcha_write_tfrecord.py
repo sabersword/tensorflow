@@ -70,10 +70,12 @@ def read_images_and_labels_by_estimator(image_root_dir):
     # label_array = tf.cast(label_array, tf.float32).eval()
     return image_array, label_array
 
-TRAIN_DATA_NUM = 1000
+TRAIN_DATA_NUM = 3600
+TEST_DATA_NUM = 3600
 
 
 if __name__ == '__main__':
+
     sess = tf.InteractiveSession()
     # 读取图片训练集
     images, labels = read_images_and_labels_by_estimator("train_data")
@@ -86,15 +88,14 @@ if __name__ == '__main__':
         writer.write(example.SerializeToString())
     writer.close()
 
-    # model_params = {"learning_rate": 0.0001}
-    # estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="captcha_models")
+    # 读取图片测试集
+    images, labels = read_images_and_labels_by_estimator("test_data")
+    writer = tf.python_io.TFRecordWriter("captcha.test.tfrecords")
+    for index in range(TEST_DATA_NUM):
+        image = images[index].tostring()
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'label': _int64_feature(labels[index]),
+            'image': _bytes_feature(image)}))
+        writer.write(example.SerializeToString())
+    writer.close()
 
-    # train_input_fn = tf.estimator.inputs.numpy_input_fn(
-    #     x={"image": images},
-    #     y=labels.astype(np.int32),
-    #     num_epochs=None,
-    #     batch_size=10,
-    #     shuffle=True)
-
-    # 训练模型
-    # estimator.train(input_fn=train_input_fn, steps=10000)
