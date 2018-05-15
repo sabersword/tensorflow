@@ -1,13 +1,12 @@
 import numpy as np
 import tensorflow as tf
-from captcha.captcha_write_tfrecord import TRAIN_DATA_NUM,TEST_DATA_NUM
-from tensorflow.examples.tutorials.mnist import input_data
+from captcha.captcha_write_tfrecord import TRAIN_DATA_NUM, TEST_DATA_NUM
 
 tf.logging.set_verbosity(tf.logging.DEBUG)
 
 
 def lenet(x, is_training):
-    x = tf.reshape(x, shape=[-1, 40, 40, 1])
+    x = tf.reshape(x, shape=[-1, 40, 40, 3])
 
     conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
     conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
@@ -18,7 +17,7 @@ def lenet(x, is_training):
     fc1 = tf.contrib.layers.flatten(conv2)
     fc1 = tf.layers.dense(fc1, 1024)
     fc1 = tf.layers.dropout(fc1, rate=0.4, training=is_training)
-    return tf.layers.dense(fc1, 10)
+    return tf.layers.dense(fc1, 36)
 
 
 def model_fn(features, labels, mode, params):
@@ -59,11 +58,11 @@ def read_dataset(tfPath, num):
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-    images = np.zeros(shape=[num, 40, 40, 1])
+    images = np.zeros(shape=[num, 40, 40, 3])
     labels = np.zeros(shape=[num])
 
     for i in range(num):
-        images[i] = sess.run(image).reshape([-1, 40, 40, 1])
+        images[i] = sess.run(image).reshape([-1, 40, 40, 3])
         labels[i] = sess.run(label)
 
     images = images.astype(np.float32)
@@ -73,7 +72,7 @@ def read_dataset(tfPath, num):
 if __name__ == '__main__':
     sess = tf.InteractiveSession()
     train_images, train_labels = read_dataset("captcha.train.tfrecords", TRAIN_DATA_NUM)
-    test_images, test_labels = read_dataset("captcha.test.tfrecords", TEST_DATA_NUM)
+    test_images, test_labels = read_dataset("captcha.login.tfrecords", TEST_DATA_NUM)
 
     # 读取训练集
     # reader = tf.TFRecordReader()
@@ -103,17 +102,17 @@ if __name__ == '__main__':
     # train_labels = train_labels.astype(np.int32)
 
     model_params = {"learning_rate": 0.01}
-    estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="models/captcha_example")
+    estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="models/three_channels")
 
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"image": train_images},
         y=train_labels,
         num_epochs=None,
-        batch_size=20,
+        batch_size=50,
         shuffle=True)
 
     # 训练模型
-    # estimator.train(input_fn=train_input_fn, steps=3000)
+    # estimator.train(input_fn=train_input_fn, steps=6000)
 
     test_input_fn = tf.estimator.inputs.numpy_input_fn(
           x={"image": test_images},
@@ -125,7 +124,6 @@ if __name__ == '__main__':
     test_results = estimator.evaluate(input_fn=test_input_fn)
     accuracy_score = test_results["accuracy"]
     print("\nTest accuracy: %g %%" % (accuracy_score*100))
-
 
     # predict_input_fn = tf.estimator.inputs.numpy_input_fn(
     #       x={"image": mnist.test.images[:10]},
