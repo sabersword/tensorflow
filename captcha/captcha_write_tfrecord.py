@@ -98,9 +98,9 @@ TEST_DATA_NUM = 3600
 if __name__ == '__main__':
 
     sess = tf.InteractiveSession()
-    # 读取图片训练集
-    # images, labels = read_images_and_labels_by_estimator("train_data", TRAIN_DATA_NUM, 3)
-    # writer = tf.python_io.TFRecordWriter("captcha.train.tfrecords")
+    # # 读取图片训练集
+    # images, labels = read_images_and_labels_by_estimator("train_noise_data", TRAIN_DATA_NUM, 3)
+    # writer = tf.python_io.TFRecordWriter("captcha.train.noise.tfrecords")
     # for index in range(TRAIN_DATA_NUM):
     #     image = images[index].tostring()
     #     example = tf.train.Example(features=tf.train.Features(feature={
@@ -110,19 +110,8 @@ if __name__ == '__main__':
     # writer.close()
 
     # 读取图片测试集
-    # images, labels = read_images_and_labels_by_estimator("test_data", TEST_DATA_NUM, 3)
-    # writer = tf.python_io.TFRecordWriter("captcha.test.tfrecords")
-    # for index in range(TEST_DATA_NUM):
-    #     image = images[index].tostring()
-    #     example = tf.train.Example(features=tf.train.Features(feature={
-    #         'label': _int64_feature(labels[index]),
-    #         'image': _bytes_feature(image)}))
-    #     writer.write(example.SerializeToString())
-    # writer.close()
-
-    # 读取登录集
-    images, labels = read_images_and_labels_by_estimator("login_data", TEST_DATA_NUM, 3, True)
-    writer = tf.python_io.TFRecordWriter("captcha.login.tfrecords")
+    images, labels = read_images_and_labels_by_estimator("test_noise_data", TEST_DATA_NUM, 3)
+    writer = tf.python_io.TFRecordWriter("captcha.test.noise.tfrecords")
     for index in range(TEST_DATA_NUM):
         image = images[index].tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
@@ -130,4 +119,15 @@ if __name__ == '__main__':
             'image': _bytes_feature(image)}))
         writer.write(example.SerializeToString())
     writer.close()
+
+    # 读取登录集
+    # images, labels = read_images_and_labels_by_estimator("login_data", TEST_DATA_NUM, 3, True)
+    # writer = tf.python_io.TFRecordWriter("captcha.login.tfrecords")
+    # for index in range(TEST_DATA_NUM):
+    #     image = images[index].tostring()
+    #     example = tf.train.Example(features=tf.train.Features(feature={
+    #         'label': _int64_feature(labels[index]),
+    #         'image': _bytes_feature(image)}))
+    #     writer.write(example.SerializeToString())
+    # writer.close()
 

@@ -71,7 +71,7 @@ def read_dataset(tfPath, num):
 
 if __name__ == '__main__':
     sess = tf.InteractiveSession()
-    train_images, train_labels = read_dataset("captcha.train.tfrecords", TRAIN_DATA_NUM)
+    train_images, train_labels = read_dataset("captcha.train.noise.tfrecords", TRAIN_DATA_NUM)
     test_images, test_labels = read_dataset("captcha.login.tfrecords", TEST_DATA_NUM)
 
     # 读取训练集
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     # train_labels = train_labels.astype(np.int32)
 
     model_params = {"learning_rate": 0.01}
-    estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="models/three_channels")
+    estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="models/noise")
 
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"image": train_images},
