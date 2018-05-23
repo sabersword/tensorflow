@@ -6,18 +6,18 @@ tf.logging.set_verbosity(tf.logging.DEBUG)
 
 
 def lenet(x, is_training):
-    x = tf.reshape(x, shape=[-1, 40, 40, 3])
+    x = tf.reshape(x, shape=[-1, 40, 35, 3])
 
-    conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
+    conv1 = tf.layers.conv2d(x, 96, 5, activation=tf.nn.relu)
     conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
 
-    conv2 = tf.layers.conv2d(conv1, 64, 3, activation=tf.nn.relu)
+    conv2 = tf.layers.conv2d(conv1, 192, 3, activation=tf.nn.relu)
     conv2 = tf.layers.max_pooling2d(conv2, 2, 2)
 
     fc1 = tf.contrib.layers.flatten(conv2)
-    fc1 = tf.layers.dense(fc1, 1024)
-    fc1 = tf.layers.dropout(fc1, rate=0.4, training=is_training)
-    return tf.layers.dense(fc1, 36)
+    fc1 = tf.layers.dense(fc1, 4096)
+    fc1 = tf.layers.dropout(fc1, rate=0.5, training=is_training)
+    return tf.layers.dense(fc1, 35)
 
 
 def model_fn(features, labels, mode, params):
@@ -58,11 +58,11 @@ def read_dataset(tfPath, num):
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-    images = np.zeros(shape=[num, 40, 40, 3])
+    images = np.zeros(shape=[num, 40, 35, 3])
     labels = np.zeros(shape=[num])
 
     for i in range(num):
-        images[i] = sess.run(image).reshape([-1, 40, 40, 3])
+        images[i] = sess.run(image).reshape([-1, 40, 35, 3])
         labels[i] = sess.run(label)
 
     images = images.astype(np.float32)
@@ -71,8 +71,8 @@ def read_dataset(tfPath, num):
 
 if __name__ == '__main__':
     sess = tf.InteractiveSession()
-    train_images, train_labels = read_dataset("captcha.train.noise.tfrecords", TRAIN_DATA_NUM)
-    test_images, test_labels = read_dataset("captcha.login.tfrecords", TEST_DATA_NUM)
+    train_images, train_labels = read_dataset("captcha.train.tfrecords", TRAIN_DATA_NUM)
+    test_images, test_labels = read_dataset("captcha.test.tfrecords", TEST_DATA_NUM)
 
     # 读取训练集
     # reader = tf.TFRecordReader()
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     # train_labels = train_labels.astype(np.int32)
 
     model_params = {"learning_rate": 0.01}
-    estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="models/noise")
+    estimator = tf.estimator.Estimator(model_fn=model_fn, params=model_params, model_dir="models/captcha")
 
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"image": train_images},
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         shuffle=True)
 
     # 训练模型
-    # estimator.train(input_fn=train_input_fn, steps=6000)
+    estimator.train(input_fn=train_input_fn, steps=6000)
 
     test_input_fn = tf.estimator.inputs.numpy_input_fn(
           x={"image": test_images},
@@ -123,13 +123,13 @@ if __name__ == '__main__':
 
     test_results = estimator.evaluate(input_fn=test_input_fn)
     accuracy_score = test_results["accuracy"]
-    print("\nTest accuracy: %g %%" % (accuracy_score*100))
+    print("Test accuracy: %g %%" % (accuracy_score*100))
 
-    # predict_input_fn = tf.estimator.inputs.numpy_input_fn(
-    #       x={"image": mnist.test.images[:10]},
-    #       num_epochs=1,
-    #       shuffle=False)
-    #
-    # predictions = estimator.predict(input_fn=predict_input_fn)
-    # for i, p in enumerate(predictions):
-    #     print("Prediction %s: %s" % (i + 1, p["result"]))
+    predict_input_fn = tf.estimator.inputs.numpy_input_fn(
+          x={"image": test_images},
+          num_epochs=1,
+          shuffle=False)
+
+    predictions = estimator.predict(input_fn=predict_input_fn)
+    for i, p in enumerate(predictions):
+        print("Prediction %s: %s" % (i + 1, p["result"]))

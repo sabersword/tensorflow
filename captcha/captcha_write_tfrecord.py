@@ -15,45 +15,9 @@ def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
-def lenet(x, is_training):
-    x = tf.reshape(x, shape=[-1, 40, 40, 1])
-
-    conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
-    conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
-
-    conv2 = tf.layers.conv2d(conv1, 64, 3, activation=tf.nn.relu)
-    conv2 = tf.layers.max_pooling2d(conv2, 2, 2)
-
-    fc1 = tf.contrib.layers.flatten(conv2)
-    fc1 = tf.layers.dense(fc1, 1024)
-    fc1 = tf.layers.dropout(fc1, rate=0.4, training=is_training)
-    return tf.layers.dense(fc1, 10)
-
-
-def model_fn(features, labels, mode, params):
-    predict = lenet(features["image"], mode == tf.estimator.ModeKeys.TRAIN)
-
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions={"result": tf.argmax(predict, 1)})
-
-    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=predict, labels=labels))
-
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=params["learning_rate"])
-
-    train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
-
-    eval_metric_ops = {"accuracy": tf.metrics.accuracy(tf.argmax(predict, 1), labels)}
-
-    return tf.estimator.EstimatorSpec(
-        mode=mode,
-        loss=loss,
-        train_op=train_op,
-        eval_metric_ops=eval_metric_ops)
-
-
 def read_images_and_labels_by_estimator(image_root_dir, number, channel=1, is_fill=False):
     image_dirs = os.listdir(image_root_dir)
-    image_array = np.zeros(shape=(number, 40, 40, channel))
+    image_array = np.zeros(shape=(number, 40, 35, channel))
     label_array = np.zeros(shape=number, dtype=np.int32)
     i = 0
     for image_dir in image_dirs:
@@ -91,16 +55,16 @@ def read_images_and_labels_by_estimator(image_root_dir, number, channel=1, is_fi
     # label_array = tf.cast(label_array, tf.float32).eval()
     return image_array, label_array
 
-TRAIN_DATA_NUM = 3600
-TEST_DATA_NUM = 3600
+TRAIN_DATA_NUM = 5830
+TEST_DATA_NUM = 310
 
 
 if __name__ == '__main__':
 
     sess = tf.InteractiveSession()
-    # # 读取图片训练集
-    # images, labels = read_images_and_labels_by_estimator("train_noise_data", TRAIN_DATA_NUM, 3)
-    # writer = tf.python_io.TFRecordWriter("captcha.train.noise.tfrecords")
+    # 读取图片训练集
+    # images, labels = read_images_and_labels_by_estimator("train_data", TRAIN_DATA_NUM, 3)
+    # writer = tf.python_io.TFRecordWriter("captcha.train.tfrecords")
     # for index in range(TRAIN_DATA_NUM):
     #     image = images[index].tostring()
     #     example = tf.train.Example(features=tf.train.Features(feature={
@@ -110,8 +74,8 @@ if __name__ == '__main__':
     # writer.close()
 
     # 读取图片测试集
-    images, labels = read_images_and_labels_by_estimator("test_noise_data", TEST_DATA_NUM, 3)
-    writer = tf.python_io.TFRecordWriter("captcha.test.noise.tfrecords")
+    images, labels = read_images_and_labels_by_estimator("test_data", TEST_DATA_NUM, 3)
+    writer = tf.python_io.TFRecordWriter("captcha.test.tfrecords")
     for index in range(TEST_DATA_NUM):
         image = images[index].tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
@@ -121,7 +85,7 @@ if __name__ == '__main__':
     writer.close()
 
     # 读取登录集
-    # images, labels = read_images_and_labels_by_estimator("login_data", TEST_DATA_NUM, 3, True)
+    # images, labels = read_images_and_labels_by_estimator("login_data", TEST_DATA_NUM, 3, TRUE)
     # writer = tf.python_io.TFRecordWriter("captcha.login.tfrecords")
     # for index in range(TEST_DATA_NUM):
     #     image = images[index].tostring()
