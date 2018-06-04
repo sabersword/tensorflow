@@ -42,8 +42,6 @@ def main(username, password, sign_type):
                 sys.exit(1)
 
         # 识别验证码
-        # with open('E:/picture_test/' + '11' + '.jpg', 'wb') as file:
-        #     file.write(img.content)
         img_data = tf.image.decode_jpeg(img.content).eval() / 255
         captcha_code = captcha_recognize.recognize(img_data)
         print(captcha_code)
