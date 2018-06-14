@@ -66,3 +66,4 @@ if __name__ == '__main__':
         raise Exception
     main(sign_type=sys.argv[3], username=sys.argv[1], password=sys.argv[2])
 
+
